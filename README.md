@@ -1,1 +1,1 @@
-#### The simple JVM implemented, just for play. Code is fun. 😍😍
+#### The simple garbage-first implemented, just for play. Code is fun. 😍😍
