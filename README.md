@@ -1,1 +1,1 @@
-#### The simple garbage-first implemented, just for play. Code is fun. 😍😍
+#### The garbage-first implemented for rust, just for play. Code is fun. 😍😍
