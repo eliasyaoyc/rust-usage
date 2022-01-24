@@ -1,7 +1,3 @@
-# 1. Type Convert
-Take one struct convert another struct, reference from `Iterator` implementation.
-
-```rust
 trait Animal {
     fn name(&self) -> String;
 }
@@ -50,4 +46,3 @@ fn test() {
     let animal = people.into_animal();
     println!("{}", animal.name());
 }
-```
