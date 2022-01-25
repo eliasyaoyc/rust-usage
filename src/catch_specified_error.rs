@@ -96,14 +96,11 @@ trait Animal {
     fn name(&self) -> Result<String>;
 }
 
-struct People {
-    name: String,
-}
+struct People;
 
 impl People {
     fn new() -> People {
-        let p = People { name: "".to_string() };
-        p
+        People
     }
 
     fn catch_error<F, ErrType>(self, f: F) -> CatchError<Self, F, ErrType>
