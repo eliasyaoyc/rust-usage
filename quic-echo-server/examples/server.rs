@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use s2n_quic::Server;
+use s2n_quic_rustls::server::Builder;
 
 const CERT_PEM: &str = include_str!("../cert.pem");
 const KEY_PEM: &str = include_str!("../key.pem");
@@ -7,8 +8,13 @@ const KEY_PEM: &str = include_str!("../key.pem");
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = "127.0.0.1:4433";
+    let config = Builder::new()
+        .with_certificate(CERT_PEM, KEY_PEM)?
+        .with_key_logging()?
+        .build()?;
+
     let mut server = Server::builder()
-        .with_tls((CERT_PEM, KEY_PEM))?
+        .with_tls(config)?
         .with_io(addr)?
         .start()
         .map_err(|e| anyhow!("Failed to start server. Error: {e}"))?;

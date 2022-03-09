@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-s2n-quic = "1"
+s2n-quic = {version = "1",default-features = false, features = ["provider-address-token-default","provider-tls-rustls"]}
+s2n-quic-rustls = "0.1"
 anyhow = "1"
 tokio = { version = "1", features = ["full"] }
 
