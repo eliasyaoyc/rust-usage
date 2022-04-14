@@ -1,7 +1,7 @@
-use proc_marcos::Builder;
+use proc_marcos::BuilderWithAttr;
 
 #[allow(dead_code)]
-#[derive(Debug, Builder)]
+#[derive(Debug, BuilderWithAttr)]
 struct Command {
     executable: String,
     #[builder(each = "arg",default = "Default::default()")]
@@ -14,13 +14,11 @@ struct Command {
 fn main() {
     let command = Command::builder()
         .executable("find")
-        .args(vec!["-c".into(), "-vvv".into()])
-        // .arg("-c")
-        // .arg("-vvv")
-        .env(vec![])
-        // .env("RUST_LOG=info")
+        .arg("-c")
+        .arg("-vvv")
+        .env("RUST_LOG=info")
         .current_dir("/Us")
-        .finish().unwrap();
+        .build().unwrap();
 
     println!("{:?}", command);
 }
