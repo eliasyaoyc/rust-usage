@@ -15,4 +15,5 @@ members = [
     "diskhash",
     "proc-marcos",
     "type-exercise",
+    "v8-live"
 ]
