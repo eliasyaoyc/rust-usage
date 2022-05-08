@@ -1,10 +1,10 @@
 'use strict';
 
-(({ print,fetch }) => {
+(({print, fetch}) => {
     globalThis.print = (args) => {
         return print(args);
     };
-    globalThis.fetch = (args) => {
-        return fetch(args);
+    globalThis.fetch = async (args) => {
+        return await fetch(args);
     };
 });
