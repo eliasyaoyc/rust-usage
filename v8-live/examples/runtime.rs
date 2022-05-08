@@ -2,7 +2,7 @@ use v8_live::{JsRuntime, JsRuntimeParams};
 
 fn main() {
     JsRuntime::init();
-    let mut runtime = JsRuntime::new(JsRuntimeParams::default());
+    let mut runtime = JsRuntime::new(None);
     let code = r#"
     function hello(){
        let result = print({a: 1, b : 2});

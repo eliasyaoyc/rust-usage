@@ -3,9 +3,12 @@ mod state;
 mod utils;
 
 use once_cell::sync::OnceCell;
-use v8::{CreateParams, HandleScope, Isolate, OwnedIsolate, Script, TryCatch, V8};
+use v8::{
+    CreateParams, FunctionCodeHandling, HandleScope, Isolate, OwnedIsolate, Script,
+    SnapshotCreator, TryCatch, V8,
+};
 
-use crate::extension::Extensions;
+use crate::extension::{Extensions, EXTERNAM_REFERENCES};
 use crate::state::JsRuntimeState;
 use crate::utils::execute_script;
 
@@ -20,7 +23,11 @@ pub struct JsRuntimeParams(CreateParams);
 
 impl JsRuntimeParams {
     pub fn new(snapshot: Option<Vec<u8>>) -> Self {
-        JsRuntimeParams(CreateParams::default())
+        let mut params = CreateParams::default();
+        if let Some(snapshot) = snapshot {
+            params = params.snapshot_blob(snapshot);
+        }
+        JsRuntimeParams(params)
     }
 
     pub fn into_inner(self) -> CreateParams {
@@ -38,9 +45,15 @@ impl JsRuntime {
         });
     }
 
-    pub fn new(params: JsRuntimeParams) -> Self {
-        let isolate = Isolate::new(params.into_inner());
-        JsRuntime::init_isolate(isolate)
+    pub fn new(snapshot: Option<Vec<u8>>) -> Self {
+        let mut params = CreateParams::default().external_references(&**EXTERNAM_REFERENCES);
+        let mut initialized = false;
+        if let Some(snapshot) = snapshot {
+            params = params.snapshot_blob(snapshot);
+            initialized = true;
+        }
+        let isolate = Isolate::new(params);
+        JsRuntime::init_isolate(isolate, initialized)
     }
 
     pub fn execute_script(
@@ -56,13 +69,29 @@ impl JsRuntime {
     }
 
     pub fn create_snapshot() -> Vec<u8> {
-        todo!()
+        let mut sc = SnapshotCreator::new(Some(&EXTERNAM_REFERENCES));
+
+        let isolate = unsafe { sc.get_owned_isolate() };
+        let mut runtime = JsRuntime::init_isolate(isolate, false);
+        {
+            let context = JsRuntimeState::get_context(&mut runtime.isolate);
+            let handle_scope = &mut HandleScope::new(&mut runtime.isolate);
+            let context = v8::Local::new(handle_scope, context);
+            sc.set_default_context(context);
+        }
+        JsRuntimeState::drop_context(&mut runtime.isolate);
+        std::mem::forget(runtime);
+
+        match sc.create_blob(FunctionCodeHandling::Keep) {
+            Some(blob) => blob.to_vec(),
+            None => panic!("Failed to create snapshot."),
+        }
     }
 
-    pub fn init_isolate(mut isolate: OwnedIsolate) -> Self {
+    pub fn init_isolate(mut isolate: OwnedIsolate, initiazlied: bool) -> Self {
         let state = JsRuntimeState::new(&mut isolate);
         isolate.set_slot(state);
-        {
+        if !initiazlied {
             let context = JsRuntimeState::get_context(&mut isolate);
             let scope = &mut HandleScope::with_context(&mut isolate, context);
             Extensions::install(scope);

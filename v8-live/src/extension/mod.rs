@@ -1,10 +1,24 @@
-use v8::{FunctionCallbackArguments, HandleScope, ReturnValue};
+use lazy_static::lazy_static;
+use v8::{
+    ExternalReference, ExternalReferences, FunctionCallbackArguments, HandleScope, MapFnTo,
+    ReturnValue,
+};
 
 use crate::utils::execute_script;
 
 pub struct Extensions;
 
 const GLUE: &str = include_str!("glue.js");
+lazy_static! {
+    pub static ref EXTERNAM_REFERENCES: ExternalReferences = ExternalReferences::new(&[
+        ExternalReference {
+            function: MapFnTo::map_fn_to(print),
+        },
+        ExternalReference {
+            function: MapFnTo::map_fn_to(fetch),
+        }
+    ]);
+}
 
 impl Extensions {
     pub fn install(scope: &mut HandleScope) {
