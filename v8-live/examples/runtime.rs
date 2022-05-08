@@ -5,10 +5,9 @@ fn main() {
     let mut runtime = JsRuntime::new(JsRuntimeParams::default());
     let code = r#"
     function hello(){
-       return {
-         status: 200,
-         message: "Hello, world!"
-       };
+       let result = print({a: 1, b : 2});
+       print(result);
+       return fetch("https://www.rust-lang.org/");
     }
     hello();
     "#;

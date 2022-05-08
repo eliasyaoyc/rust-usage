@@ -1,9 +1,13 @@
 mod extension;
 mod state;
+mod utils;
 
+use once_cell::sync::OnceCell;
 use v8::{CreateParams, HandleScope, Isolate, OwnedIsolate, Script, TryCatch, V8};
 
+use crate::extension::Extensions;
 use crate::state::JsRuntimeState;
+use crate::utils::execute_script;
 
 type LocalValue<'s> = v8::Local<'s, v8::Value>;
 
@@ -26,9 +30,12 @@ impl JsRuntimeParams {
 
 impl JsRuntime {
     pub fn init() {
-        let platform = v8::new_default_platform(0, false).make_shared();
-        V8::initialize_platform(platform);
-        V8::initialize();
+        static V8_INSTANCE: OnceCell<()> = OnceCell::new();
+        V8_INSTANCE.get_or_init(|| {
+            let platform = v8::new_default_platform(0, false).make_shared();
+            V8::initialize_platform(platform);
+            V8::initialize();
+        });
     }
 
     pub fn new(params: JsRuntimeParams) -> Self {
@@ -55,17 +62,11 @@ impl JsRuntime {
     pub fn init_isolate(mut isolate: OwnedIsolate) -> Self {
         let state = JsRuntimeState::new(&mut isolate);
         isolate.set_slot(state);
+        {
+            let context = JsRuntimeState::get_context(&mut isolate);
+            let scope = &mut HandleScope::with_context(&mut isolate, context);
+            Extensions::install(scope);
+        };
         JsRuntime { isolate }
     }
-}
-
-fn execute_script<'s>(
-    scope: &mut HandleScope<'s>,
-    code: impl AsRef<str>,
-) -> Result<LocalValue<'s>, LocalValue<'s>> {
-    let scope = &mut TryCatch::new(scope);
-    let source = v8::String::new(scope, code.as_ref()).unwrap();
-    Script::compile(scope, source, None)
-        .and_then(|script| script.run(scope))
-        .map_or_else(|| Err(scope.stack_trace()).unwrap(), Ok)
 }
