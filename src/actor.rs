@@ -1,23 +1,27 @@
+use anyhow::Result;
+use tokio::sync::{mpsc, oneshot};
+
 pub struct Actor<State, Request, Reply> {
     receiver: mpsc::Receiver<ActorMessage<Request, Reply>>,
     state: State,
 }
 
 impl<State, Request, Reply> Actor<State, Request, Reply>
-    where
-        State: Default + Send + 'static,
-        Request: HandleCall<State=State, Reply=Reply> + Send + 'static,
-        Reply: Send + 'static,
+where
+    State: Default + Send + 'static,
+    Request: HandleCall<State = State, Reply = Reply> + Send + 'static,
+    Reply: Send + 'static,
 {
     pub fn spawn(mailbox: usize) -> Pid<Request, Reply> {
         let (sender, receiver) = mpsc::channel(mailbox);
-        let actor = Actor {
+        let mut actor: Actor<State, Request, Reply> = Actor {
             receiver,
             state: State::default(),
         };
-        tokio::spanw(async move || {
-            while let Some(msg) = actor.receiver.await {
-                let reply = msg.handle_call(&mut actor.state).unwrap();
+
+        tokio::spawn(async move {
+            while let Some(msg) = actor.receiver.recv().await {
+                let reply = msg.data.handle_call(&mut actor.state).unwrap();
                 let _ = msg.sender.send(reply);
             }
         });
@@ -34,21 +38,18 @@ pub struct ActorMessage<Request, Reply> {
 pub trait HandleCall {
     type State;
     type Reply;
-    fn handle_call(&self, state: &mut self::state) -> Result<self::Reply>;
+    fn handle_call(&self, state: &mut Self::State) -> Result<Self::Reply>;
 }
 
-#[derive(Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct Pid<Request, Reply> {
-    sender: mpsc::Receiver<ActorMessage<Request, Reply>>,
+    sender: mpsc::Sender<ActorMessage<Request, Reply>>,
 }
 
 impl<Request, Reply> Pid<Request, Reply> {
-    pub fn send(&self, req: Request) -> Result<Reply> {
+    pub async fn send(&mut self, req: Request) -> Result<Reply> {
         let (sender, receiver) = oneshot::channel();
-        let message = ActorMessage {
-            sender,
-            data: req,
-        };
+        let message = ActorMessage { sender, data: req };
         let _ = self.sender.send(message).await;
         Ok(receiver.await?)
     }
@@ -62,16 +63,16 @@ mod tests {
         type State = usize;
         type Reply = usize;
 
-        fn handle_call(&self, state: &mut Self::State) -> Result<Self::Reply>{
+        fn handle_call(&self, state: &mut Self::State) -> Result<Self::Reply> {
             *state += 1;
             println!("State: {state:?}");
             Ok(self + 1)
         }
     }
 
-    #[test]
-    fn it_work() {
-        let pid = Actor::spawn(20);
+    #[tokio::test]
+    async fn it_work() {
+        let mut pid = Actor::spawn(20);
         let result = pid.send(42).await.unwrap();
         assert_eq!(result, 43);
     }

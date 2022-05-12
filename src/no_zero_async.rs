@@ -1,11 +1,10 @@
 use std::future::Future;
 use std::io::Write;
-use std::vec;
-
-use bytes::Bytes;
 
 /// # async-trait demo
 /// ```
+/// use async_trait::async_trait;
+///
 /// #[async_trait]
 /// trait KvIterator {
 ///     async fn next(&mut self) -> Option<(&[u8], &[u8])>;
@@ -131,6 +130,8 @@ trait KkIterator {
 
 #[tokio::test]
 async fn test_iterator() {
+    use bytes::Bytes;
+
     let mut iter = TestIterator::new(0, 10);
     while let Some((key, value)) = iter.next().await {
         println!(
