@@ -17,5 +17,6 @@ members = [
     "proc-marcos",
     "type-exercise",
     "v8-live",
-    "deno"
+    "deno",
+    "kv"
 ]
