@@ -1,13 +1,17 @@
-mod pb;
 mod noise_codec;
+mod pb;
+
+use std::sync::Arc;
 
 use anyhow::Result;
-use prost::Message;
-use crate::pb::RequestGet;
 use dashmap::DashMap;
-use std::sync::Arc;
+use futures::{SinkExt, StreamExt};
 use tokio::net::TcpListener;
+use tokio_util::codec::LengthDelimitedCodec;
 use tracing::info;
+
+use crate::pb::request::Command;
+use crate::pb::{Request, RequestGet, RequestPut, Response};
 
 #[derive(Debug)]
 struct ServerState {
@@ -16,13 +20,15 @@ struct ServerState {
 
 impl ServerState {
     pub fn new() -> Self {
-        ServerState { store: DashMap::new() }
+        ServerState {
+            store: DashMap::new(),
+        }
     }
 }
 
 impl Default for ServerState {
     fn default() -> Self {
-        self::new()
+        Self::new()
     }
 }
 
@@ -36,8 +42,36 @@ async fn main() -> Result<()> {
     let addr = "0.0.0.0:8888";
     let listener = TcpListener::bind(addr).await?;
 
-    info!("Listening to {:?}",addr);
+    info!("Listening to {:?}", addr);
 
-    tokio::spawn(async move {
-    });
+    loop {
+        let (stream, addr) = listener.accept().await?;
+        info!("New client: {:?} accepted", addr);
+
+        let shared = state.clone();
+
+        tokio::spawn(async move {
+            let mut stream = LengthDelimitedCodec::builder()
+                .length_field_length(2)
+                .new_framed(stream);
+            while let Some(Ok(buf)) = stream.next().await {
+                let msg: Request = buf.try_into()?;
+                info!("Got a command: {msg:?}");
+
+                let response = match msg.command {
+                    Some(Command::Get(RequestGet { key })) => match shared.store.get(&key) {
+                        Some(v) => Response::new(key, v.value().to_vec()),
+                        None => Response::not_found(key),
+                    },
+                    Some(Command::Put(RequestPut { key, value })) => {
+                        shared.store.insert(key.clone(), value.clone());
+                        Response::new(key, value)
+                    }
+                    None => unimplemented!(),
+                };
+                stream.send(response.into()).await?;
+            }
+            Ok::<(), anyhow::Error>(())
+        });
+    }
 }

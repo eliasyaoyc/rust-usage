@@ -1,12 +1,12 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Request {
-    #[prost(oneof="request::Message", tags="1, 2")]
-    pub message: ::core::option::Option<request::Message>,
+    #[prost(oneof="request::Command", tags="1, 2")]
+    pub command: ::core::option::Option<request::Command>,
 }
 /// Nested message and enum types in `Request`.
 pub mod request {
     #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Message {
+    pub enum Command {
         #[prost(message, tag="1")]
         Get(super::RequestGet),
         #[prost(message, tag="2")]
@@ -19,8 +19,8 @@ pub struct Response {
     pub code: u32,
     #[prost(string, tag="2")]
     pub key: ::prost::alloc::string::String,
-    #[prost(string, tag="3")]
-    pub value: ::prost::alloc::string::String,
+    #[prost(bytes="vec", tag="3")]
+    pub value: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RequestGet {

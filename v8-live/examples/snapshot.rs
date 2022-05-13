@@ -45,6 +45,6 @@ fn run_snapshot(path: &str) {
     hello();
     "#;
 
-    let result = runtime.execute_script(code);
+    let result = runtime.execute_script(code,false);
     println!("Result is: {result:?}")
 }
