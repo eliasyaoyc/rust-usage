@@ -1,10 +1,8 @@
-use std::{
-    convert::Infallible,
-    error::Error as StdError,
-    fmt::{self, Debug, Display, Formatter},
-    string::FromUtf8Error,
-    marker::PhantomData,
-};
+use std::convert::Infallible;
+use std::error::Error as StdError;
+use std::fmt::{self, Debug, Display, Formatter};
+use std::marker::PhantomData;
+use std::string::FromUtf8Error;
 
 enum ErrorSource {
     BoxedError(Box<dyn StdError>),
@@ -104,10 +102,10 @@ impl People {
     }
 
     fn catch_error<F, ErrType>(self, f: F) -> CatchError<Self, F, ErrType>
-        where
-            F: Fn(ErrType) -> Result<String>,
-            ErrType: StdError + 'static,
-            Self: Sized,
+    where
+        F: Fn(ErrType) -> Result<String>,
+        ErrType: StdError + 'static,
+        Self: Sized,
     {
         CatchError::new(self, f)
     }
@@ -120,15 +118,17 @@ impl Animal for People {
 }
 
 impl<E, F, ErrType> Animal for CatchError<E, F, ErrType>
-    where
-        E: Animal,
-        F: Fn(ErrType) -> Result<String>,
-        ErrType: StdError + 'static + Send + Sync,
+where
+    E: Animal,
+    F: Fn(ErrType) -> Result<String>,
+    ErrType: StdError + 'static + Send + Sync,
 {
     fn name(&self) -> Result<String> {
         match self.inner.name() {
             Ok(v) => Ok(v),
-            Err(err) if err.is::<ErrType>() => Ok((self.f)(err.downcast::<ErrType>().unwrap()).unwrap()),
+            Err(err) if err.is::<ErrType>() => {
+                Ok((self.f)(err.downcast::<ErrType>().unwrap()).unwrap())
+            }
             Err(err) => Err(err),
         }
     }
@@ -167,7 +167,7 @@ impl TestError for AnotherError {
 impl<A: TestError + StdError + Send + Sync + 'static> From<A> for Error {
     fn from(e: A) -> Self {
         Error {
-            source: ErrorSource::BoxedError(Box::new(e))
+            source: ErrorSource::BoxedError(Box::new(e)),
         }
     }
 }

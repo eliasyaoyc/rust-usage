@@ -1,4 +1,3 @@
-
 use proc_marcos::sql;
 
 fn main() {

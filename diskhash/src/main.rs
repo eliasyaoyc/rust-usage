@@ -31,18 +31,16 @@ impl Config for MyConfig {
 }
 
 fn main() {
-    let mut builder = HashTableOwned::<MyConfig>::with_capacity(3,95);
-    builder.insert(&1,&2);
-    builder.insert(&3,&4);
-    builder.insert(&5,&6);
+    let mut builder = HashTableOwned::<MyConfig>::with_capacity(3, 95);
+    builder.insert(&1, &2);
+    builder.insert(&3, &4);
+    builder.insert(&5, &6);
 
     let serializd = builder.raw_bytes().to_owned();
 
-    let table = HashTable::<MyConfig,&[u8]>::from_raw_bytes(
-        &serializd[..]
-    ).unwrap();
+    let table = HashTable::<MyConfig, &[u8]>::from_raw_bytes(&serializd[..]).unwrap();
 
-    assert_eq!(table.get(&1),Some(2));
-    assert_eq!(table.get(&3),Some(4));
-    assert_eq!(table.get(&5),Some(6));
+    assert_eq!(table.get(&1), Some(2));
+    assert_eq!(table.get(&3), Some(4));
+    assert_eq!(table.get(&5), Some(6));
 }

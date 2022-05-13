@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
+
+use serde::{Deserialize, Serialize};
 
 pub mod generated {
     use proc_marcos::generate;

@@ -4,9 +4,9 @@ use proc_marcos::BuilderWithAttr;
 #[derive(Debug, BuilderWithAttr)]
 struct Command {
     executable: String,
-    #[builder(each = "arg",default = "Default::default()")]
+    #[builder(each = "arg", default = "Default::default()")]
     args: Vec<String>,
-    #[builder(each = "env",default = "vec![]")]
+    #[builder(each = "env", default = "vec![]")]
     env: Vec<String>,
     current_dir: Option<String>,
 }
@@ -18,7 +18,8 @@ fn main() {
         .arg("-vvv")
         .env("RUST_LOG=info")
         .current_dir("/Us")
-        .build().unwrap();
+        .build()
+        .unwrap();
 
     println!("{:?}", command);
 }

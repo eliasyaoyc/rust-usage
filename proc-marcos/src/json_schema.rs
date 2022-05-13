@@ -1,18 +1,21 @@
-use proc_macro::{TokenStream, TokenTree};
 use std::collections::HashMap;
 use std::fs;
-use heck::{AsPascalCase, AsSnakeCase};
-use serde::{Serialize, Deserialize};
-use askama::Template;
+
 use anyhow::{anyhow, Result};
+use askama::Template;
+use heck::{AsPascalCase, AsSnakeCase};
 use litrs::Literal;
+use proc_macro::{TokenStream, TokenTree};
+use serde::{Deserialize, Serialize};
 
 pub fn get_string_literal(input: TokenStream) -> Result<String> {
-    input.into_iter().next()
+    input
+        .into_iter()
+        .next()
         .and_then(|v| Literal::try_from(v).ok())
         .and_then(|v| match v {
             Literal::String(s) => Some(s.value().to_string()),
-            _ => None
+            _ => None,
         })
         .ok_or_else(|| anyhow!("Only string literals are allowed"))
 }
@@ -89,14 +92,17 @@ impl Schema {
         let mut structs = vec![];
         match self.ty.as_str() {
             "object" => {
-                let fields = self.properties.as_ref().unwrap()
+                let fields = self
+                    .properties
+                    .as_ref()
+                    .unwrap()
                     .iter()
-                    .map(|(k, v)| { process_type(&mut structs, k.as_str(), v) })
+                    .map(|(k, v)| process_type(&mut structs, k.as_str(), v))
                     .collect();
                 structs.push(St::new(p(self.title.as_ref().unwrap()), fields));
                 structs
             }
-            _ => panic!("Not support yet")
+            _ => panic!("Not support yet"),
         }
     }
 }
@@ -143,11 +149,7 @@ mod tests {
         let st = structs.pop().unwrap();
         assert_eq!(st.name, "Person1");
         assert_eq!(st.fields.len(), 2);
-        let mut names = st
-            .fields
-            .iter()
-            .map(|f| f.name.clone())
-            .collect::<Vec<_>>();
+        let mut names = st.fields.iter().map(|f| f.name.clone()).collect::<Vec<_>>();
         names.sort();
         assert_eq!(&names[..], &["first_name", "last_name"]);
         assert_eq!(st.fields[0].ty, "String");

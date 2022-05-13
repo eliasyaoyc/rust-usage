@@ -18,5 +18,6 @@ members = [
     "type-exercise",
     "v8-live",
     "deno",
-    "kv"
+    "kv",
+    "pow",
 ]

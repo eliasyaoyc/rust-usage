@@ -5,7 +5,6 @@ use syn::{
     TypePath,
 };
 
-
 struct Fd {
     name: Ident,
     ty: Type,
@@ -32,9 +31,9 @@ impl From<DeriveInput> for BuilderContext {
     fn from(input: DeriveInput) -> Self {
         let name = input.ident;
         let fields = if let Data::Struct(DataStruct {
-                                             fields: Fields::Named(FieldsNamed { named, .. }),
-                                             ..
-                                         }) = input.data
+            fields: Fields::Named(FieldsNamed { named, .. }),
+            ..
+        }) = input.data
         {
             named
         } else {
@@ -52,8 +51,9 @@ impl BuilderContext {
         let builder_name = Ident::new(&format!("{}Builder", name), name.span());
         // optional fields. e.g. executable: String -> executable: Option<String>,
         let optionized_fields = self.gen_optionized_fields();
-        // methods: fn executable(mut self, v: impl Into<String>) -> Self { self.executable = Some(v); self }
-        // Command::builder().executable("hello").args(vec![]).envs(vec![]).finish()
+        // methods: fn executable(mut self, v: impl Into<String>) -> Self { self.executable =
+        // Some(v); self } Command::builder().executable("hello").args(vec![]).envs(vec![]).
+        // finish()
         let methods = self.gen_methods();
         // assign Builder fields back to original struct fields
         // #field_name: self.#field_name.take().ok_or("xxx need to be set!")
@@ -95,11 +95,11 @@ impl BuilderContext {
             .iter()
             .map(|Fd { name, ty, .. }| {
                 quote! {
-                pub fn #name(mut self, v: impl Into<#ty>) -> Self {
-                    self.#name = Some(v.into());
-                    self
+                    pub fn #name(mut self, v: impl Into<#ty>) -> Self {
+                        self.#name = Some(v.into());
+                        self
+                    }
                 }
-            }
             })
             .collect()
     }
@@ -124,9 +124,9 @@ impl BuilderContext {
 
 fn get_option_inner(ty: &Type) -> (bool, &Type) {
     if let Type::Path(TypePath {
-                          path: Path { segments, .. },
-                          ..
-                      }) = ty
+        path: Path { segments, .. },
+        ..
+    }) = ty
     {
         if let Some(v) = segments.iter().next() {
             if v.ident == "Option" {

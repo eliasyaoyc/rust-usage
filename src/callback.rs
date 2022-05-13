@@ -39,7 +39,7 @@ fn handle_click(exec: &Executor) {
 fn test_callback() {
     let mut executor = Executor {
         events: vec![Event {
-            typ: EventType::Click
+            typ: EventType::Click,
         }],
         callback: Box::new(handle_click),
     };

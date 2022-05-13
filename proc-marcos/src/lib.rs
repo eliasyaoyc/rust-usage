@@ -1,11 +1,12 @@
 extern crate core;
 
-mod json_schema;
 mod builder;
 mod builder_with_attr;
+mod json_schema;
 
 use proc_macro::TokenStream;
-use syn::{DeriveInput, parse_macro_input};
+use syn::{parse_macro_input, DeriveInput};
+
 use crate::builder::BuilderContext;
 use crate::json_schema::{get_string_literal, StructsTemplate};
 

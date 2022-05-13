@@ -25,7 +25,6 @@ pub struct BuilderContext {
     fields: Vec<Fd>,
 }
 
-
 /// 把一个 Field 转换成 Fd
 impl From<Field> for Fd {
     fn from(f: Field) -> Self {
@@ -48,9 +47,9 @@ impl From<DeriveInput> for BuilderContext {
         let name = input.ident;
 
         let fields = if let Data::Struct(DataStruct {
-                                             fields: Fields::Named(FieldsNamed { named, .. }),
-                                             ..
-                                         }) = input.data
+            fields: Fields::Named(FieldsNamed { named, .. }),
+            ..
+        }) = input.data
         {
             named
         } else {
@@ -61,7 +60,6 @@ impl From<DeriveInput> for BuilderContext {
         Self { name, fields: fds }
     }
 }
-
 
 impl BuilderContext {
     pub fn render(&self) -> TokenStream {
@@ -110,7 +108,8 @@ impl BuilderContext {
     }
 
     // 为 XXXBuilder 生成处理函数
-    // 比如：methods: fn executable(mut self, v: impl Into<String>) -> Self { self.executable = Some(v); self }
+    // 比如：methods: fn executable(mut self, v: impl Into<String>) -> Self { self.executable =
+    // Some(v); self }
     fn gen_methods(&self) -> Vec<TokenStream> {
         self.fields
             .iter()
@@ -184,14 +183,15 @@ fn get_vec_inner(ty: &Type) -> (bool, &Type) {
 fn get_type_inner<'a>(ty: &'a Type, name: &str) -> (bool, &'a Type) {
     // 首先模式匹配出 segments
     if let Type::Path(TypePath {
-                          path: Path { segments, .. },
-                          ..
-                      }) = ty
+        path: Path { segments, .. },
+        ..
+    }) = ty
     {
         if let Some(v) = segments.iter().next() {
             if v.ident == name {
-                // 如果 PathSegment 第一个是 Option/Vec 等类型，那么它内部应该是 AngleBracketed，比如 <T>
-                // 获取其第一个值，如果是 GenericArgument::Type，则返回
+                // 如果 PathSegment 第一个是 Option/Vec 等类型，那么它内部应该是
+                // AngleBracketed，比如 <T> 获取其第一个值，如果是
+                // GenericArgument::Type，则返回
                 let t = match &v.arguments {
                     syn::PathArguments::AngleBracketed(a) => match a.args.iter().next() {
                         Some(GenericArgument::Type(t)) => t,
