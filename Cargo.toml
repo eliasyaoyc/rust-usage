@@ -20,4 +20,5 @@ members = [
     "deno",
     "kv",
     "pow",
+    "runtime",
 ]
